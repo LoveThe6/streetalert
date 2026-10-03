@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<defs>
+<radialGradient id="bgcelectricity" cx="50%" cy="38%" r="75%"><stop offset="0" stop-color="#FFC53D" stop-opacity=".38"/><stop offset="1" stop-color="#0B111A"/></radialGradient>
+<pattern id="stcelectricity" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="6" height="16" fill="#fff" opacity=".035"/></pattern>
+<filter id="glcelectricity" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="256" height="256" fill="url(#bgcelectricity)"/><rect width="256" height="256" fill="url(#stcelectricity)"/>
+<g transform="translate(120 130) scale(9)" fill="none" stroke="#FFC53D" stroke-opacity=".16" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" />
+</g>
+<g transform="translate(68 68) scale(5)" fill="none" stroke="#FFC53D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" filter="url(#glcelectricity)">
+  <path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" />
+</g>
+</svg>

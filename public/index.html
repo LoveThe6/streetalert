@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>StreetAlert – Report and view faults in your city</title>
+  <meta name="description" content="Report electricity, water, road and accident faults in your city and see what others have reported on a live map.">
+  <meta name="theme-color" content="#0B0E13">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/png" href="/icons/favicon.png">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="StreetAlert">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="/icons/favicon.png" alt="" width="30" height="30">
+      <span>StreetAlert</span>
+    </div>
+    <div class="topbar-right">
+      <button id="installBtn" class="btn-install" hidden>Install app</button>
+      <div class="clock" aria-live="off" title="Zimbabwe time (from time API)">
+        <strong id="clockTime">--:--</strong>
+        <small id="clockDate">Loading time…</small>
+      </div>
+    </div>
+  </header>
+
+  <main id="app">
+    <!-- HOME / MENU -->
+    <section id="view-home" class="view active" aria-label="Home">
+      <div class="home-intro">
+        <h1 id="homeGreeting">What would you like to do?</h1>
+        <p id="homeSub">Help your neighbours and motorists avoid trouble on the road.</p>
+      </div>
+
+      <div class="menu-grid">
+        <button class="menu-card menu-report" data-go="report">
+          <span class="menu-icon" aria-hidden="true"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i></span>
+          <span class="menu-text"><b>Report a fault</b><small>Broken cables, burst pipes, potholes, accidents</small></span>
+        </button>
+        <button class="menu-card menu-map" data-go="map">
+          <span class="menu-icon" aria-hidden="true"><i class="fa-solid fa-map" aria-hidden="true"></i></span>
+          <span class="menu-text"><b>View reported faults</b><small>See what is happening on the streets near you</small></span>
+        </button>
+      </div>
+
+      <div class="stats" id="stats" aria-label="Community numbers"></div>
+      <button class="link-analytics" data-go="analytics">
+        <i class="fa-solid fa-chart-column" aria-hidden="true"></i>
+        <span>See analytics for your area</span>
+        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      </button>
+
+      <h2 class="section-title">Latest reports</h2>
+      <div id="latestList" class="fault-list"></div>
+    </section>
+
+    <!-- MAP -->
+    <section id="view-map" class="view" aria-label="Fault map">
+      <div class="filters">
+        <select id="filterCity" aria-label="City"></select>
+        <div class="chips" id="filterChips" role="group" aria-label="Fault category"></div>
+      </div>
+      <div class="map-wrap">
+        <div id="map" role="application" aria-label="Map of reported faults"></div>
+        <button id="locateBtn" class="map-fab" title="Show my location" aria-label="Show my location">◎</button>
+        <div class="map-count" id="mapCount"></div>
+      </div>
+      <div class="legend" id="legend"></div>
+    </section>
+
+    <!-- REPORT -->
+    <section id="view-report" class="view" aria-label="Report a fault">
+      <div class="steps" id="steps"></div>
+
+      <div id="stepCategory" class="step">
+        <h2>What kind of fault is it?</h2>
+        <div id="categoryGrid" class="cat-grid"></div>
+      </div>
+
+      <div id="stepType" class="step" hidden>
+        <button class="link-back" data-back="category">‹ Change category</button>
+        <h2 id="typeTitle">Choose the fault</h2>
+        <div id="typeGrid" class="type-grid"></div>
+      </div>
+
+      <div id="stepDetails" class="step" hidden>
+        <button class="link-back" data-back="type">‹ Change fault</button>
+        <div class="picked" id="pickedBanner"></div>
+
+        <label class="field-label">Where is it? <span class="hint">Tap the map or drag the pin to the exact spot.</span></label>
+        <div class="picker-wrap">
+          <div id="pickMap"></div>
+          <button type="button" id="useGps" class="btn btn-soft">Use my current location</button>
+        </div>
+
+        <div class="field">
+          <label for="street">Street or landmark</label>
+          <input id="street" type="text" maxlength="120" placeholder="e.g. Samora Machel Ave near the roundabout" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="reportCity">City</label>
+          <select id="reportCity"></select>
+        </div>
+        <div class="field">
+          <label for="desc">Details <span class="hint">(optional)</span></label>
+          <textarea id="desc" rows="3" maxlength="400" placeholder="What did you see? Is anyone in danger?"></textarea>
+        </div>
+        <p class="time-note" id="reportTime"></p>
+        <button id="submitFault" class="btn btn-primary btn-block">Submit report</button>
+      </div>
+
+      <div id="stepDone" class="step done" hidden>
+        <div class="done-badge" aria-hidden="true"><i class="fa-solid fa-check" aria-hidden="true"></i></div>
+        <h2>Report submitted</h2>
+        <p id="doneText"></p>
+        <div class="row">
+          <button class="btn btn-primary" id="doneView">See it on the map</button>
+          <button class="btn btn-soft" id="doneAnother">Report another</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MY REPORTS -->
+    <section id="view-mine" class="view" aria-label="My reports">
+      <h2 class="section-title">My reports</h2>
+      <div id="mineList" class="fault-list"></div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section id="view-analytics" class="view" aria-label="Analytics">
+      <h2 class="section-title" style="margin-top:0">Analytics</h2>
+      <select id="analyticsCity" aria-label="City" class="analytics-city"></select>
+
+      <div class="stats" id="analyticsTotals" aria-label="Overall numbers"></div>
+
+      <div id="analyticsCats" class="analytics-cats"></div>
+    </section>
+
+    <!-- PROFILE / AUTH -->
+    <section id="view-profile" class="view" aria-label="Profile">
+      <div id="authBox" hidden>
+        <div class="tabs" role="tablist">
+          <button role="tab" id="tabLogin" class="tab active">Log in</button>
+          <button role="tab" id="tabRegister" class="tab">Create account</button>
+        </div>
+
+        <form id="loginForm" class="card-form" novalidate>
+          <div class="field"><label for="liEmail">Email</label><input id="liEmail" type="email" autocomplete="email" required></div>
+          <div class="field"><label for="liPass">Password</label><input id="liPass" type="password" autocomplete="current-password" required></div>
+          <p class="form-error" id="loginError" role="alert"></p>
+          <button class="btn btn-primary btn-block" type="submit">Log in</button>
+        </form>
+
+        <form id="registerForm" class="card-form" novalidate hidden>
+          <div class="field"><label for="rgName">Full name</label><input id="rgName" type="text" autocomplete="name" maxlength="60" required></div>
+          <div class="field"><label for="rgEmail">Email</label><input id="rgEmail" type="email" autocomplete="email" required></div>
+          <div class="field"><label for="rgPhone">Phone <span class="hint">(optional)</span></label><input id="rgPhone" type="tel" autocomplete="tel" placeholder="+263 77 123 4567"></div>
+          <div class="field"><label for="rgCity">City you live in</label><select id="rgCity" required></select></div>
+          <div class="field"><label for="rgPass">Password <span class="hint">(6+ characters)</span></label><input id="rgPass" type="password" autocomplete="new-password" required></div>
+          <p class="form-error" id="registerError" role="alert"></p>
+          <button class="btn btn-primary btn-block" type="submit">Create account</button>
+        </form>
+      </div>
+
+      <div id="profileBox" hidden>
+        <div class="profile-head">
+          <div class="avatar" id="avatar">?</div>
+          <div><h2 id="pfName"></h2><p id="pfMeta"></p></div>
+        </div>
+        <form id="profileForm" class="card-form" novalidate>
+          <div class="field"><label for="pfNameIn">Full name</label><input id="pfNameIn" type="text" maxlength="60"></div>
+          <div class="field"><label for="pfPhone">Phone</label><input id="pfPhone" type="tel"></div>
+          <div class="field"><label for="pfCity">City</label><select id="pfCity"></select></div>
+          <details class="pw-change">
+            <summary>Change password</summary>
+            <div class="field"><label for="pfCur">Current password</label><input id="pfCur" type="password" autocomplete="current-password"></div>
+            <div class="field"><label for="pfNew">New password</label><input id="pfNew" type="password" autocomplete="new-password"></div>
+          </details>
+          <p class="form-error" id="profileError" role="alert"></p>
+          <button class="btn btn-primary btn-block" type="submit">Save changes</button>
+        </form>
+        <button class="btn btn-soft btn-block" data-go="analytics" style="margin-bottom:8px">View analytics</button>
+        <button id="logoutBtn" class="btn btn-ghost btn-block">Log out</button>
+      </div>
+
+      <div class="install-help" id="installHelp" hidden>
+        <b>Install on your phone</b>
+        <p id="installHelpText"></p>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Main">
+    <button data-go="home" class="active"><span aria-hidden="true"><i class="fa-solid fa-house" aria-hidden="true"></i></span>Home</button>
+    <button data-go="map"><span aria-hidden="true"><i class="fa-solid fa-map" aria-hidden="true"></i></span>Map</button>
+    <button data-go="report" class="tab-report"><span aria-hidden="true"><i class="fa-solid fa-plus" aria-hidden="true"></i></span>Report</button>
+    <button data-go="mine"><span aria-hidden="true"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i></span>Mine</button>
+    <button data-go="profile"><span aria-hidden="true"><i class="fa-solid fa-user" aria-hidden="true"></i></span>Profile</button>
+  </nav>
+
+  <div id="sheet" class="sheet" hidden>
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <button class="sheet-close" data-close aria-label="Close">×</button>
+      <div id="sheetBody"></div>
+    </div>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

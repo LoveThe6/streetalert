@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<defs>
+<radialGradient id="bgtfallen_tree" cx="50%" cy="38%" r="75%"><stop offset="0" stop-color="#FF7849" stop-opacity=".38"/><stop offset="1" stop-color="#0B111A"/></radialGradient>
+<pattern id="sttfallen_tree" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="6" height="16" fill="#fff" opacity=".035"/></pattern>
+<filter id="gltfallen_tree" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="256" height="256" fill="url(#bgtfallen_tree)"/><rect width="256" height="256" fill="url(#sttfallen_tree)"/>
+<g transform="translate(120 130) scale(9)" fill="none" stroke="#FF7849" stroke-opacity=".16" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17Z" />
+  <path d="M12 22v-3" />
+</g>
+<g transform="translate(68 68) scale(5)" fill="none" stroke="#FF7849" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" filter="url(#gltfallen_tree)">
+  <path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17Z" />
+  <path d="M12 22v-3" />
+</g>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<defs>
+<radialGradient id="bgtoutage" cx="50%" cy="38%" r="75%"><stop offset="0" stop-color="#FFC53D" stop-opacity=".38"/><stop offset="1" stop-color="#0B111A"/></radialGradient>
+<pattern id="sttoutage" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="6" height="16" fill="#fff" opacity=".035"/></pattern>
+<filter id="gltoutage" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="256" height="256" fill="url(#bgtoutage)"/><rect width="256" height="256" fill="url(#sttoutage)"/>
+<g transform="translate(120 130) scale(9)" fill="none" stroke="#FFC53D" stroke-opacity=".16" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M16.8 11.2c.8-.9 1.2-2 1.2-3.2a6 6 0 0 0-9.3-5" />
+  <path d="m2 2 20 20" />
+  <path d="M6.3 6.3a4.67 4.67 0 0 0 1.2 5.2c.7.7 1.3 1.5 1.5 2.5" />
+  <path d="M9 18h6" />
+  <path d="M10 22h4" />
+</g>
+<g transform="translate(68 68) scale(5)" fill="none" stroke="#FFC53D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" filter="url(#gltoutage)">
+  <path d="M16.8 11.2c.8-.9 1.2-2 1.2-3.2a6 6 0 0 0-9.3-5" />
+  <path d="m2 2 20 20" />
+  <path d="M6.3 6.3a4.67 4.67 0 0 0 1.2 5.2c.7.7 1.3 1.5 1.5 2.5" />
+  <path d="M9 18h6" />
+  <path d="M10 22h4" />
+</g>
+</svg>

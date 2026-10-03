@@ -1,0 +1,21 @@
+{
+  "name": "StreetAlert - Report and view faults",
+  "short_name": "StreetAlert",
+  "description": "Report electricity, water, road and accident faults in your city and see what others have reported on a live map.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0B0E13",
+  "theme_color": "#7C5CFF",
+  "categories": ["utilities", "navigation", "social"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Report a fault", "url": "/?action=report", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "View fault map", "url": "/?action=map", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
