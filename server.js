@@ -32,8 +32,14 @@ const USE_REDIS = !!(REDIS_URL && REDIS_TOKEN);
 const emptyDb = () => ({ secret: crypto.randomBytes(32).toString('hex'), users: [], faults: [] });
 
 async function redisCall(...cmd) {
-  const r = await fetch(`${REDIS_URL}/${cmd.map(encodeURIComponent).join('/')}`, {
-    headers: { Authorization: `Bearer ${REDIS_TOKEN}` }
+  // Sent as a POST with the command in the body (Upstash's "pipeline" style), not as a GET
+  // with the command embedded in the URL path. The value we store is the whole database as
+  // JSON and grows every time someone registers or reports a fault, so putting it in the URL
+  // eventually exceeds URL length limits and the request hangs/fails with no useful error.
+  const r = await fetch(REDIS_URL, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${REDIS_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(cmd)
   });
   if (!r.ok) throw new Error('Storage service error (HTTP ' + r.status + ')');
   return (await r.json()).result;
