@@ -405,4 +405,11 @@ if (require.main === module) {
     ));
   });
 }
-module.exports = { app, ensureDb, loadDb, saveDb, USE_REDIS };
+// Vercel's Node builder requires the module's default export to be the request-handling
+// function itself (the Express app), not an object wrapping it — so export `app` directly,
+// and attach the storage helpers to it as properties for seed.js and test.js to use.
+module.exports = app;
+module.exports.ensureDb = ensureDb;
+module.exports.loadDb = loadDb;
+module.exports.saveDb = saveDb;
+module.exports.USE_REDIS = USE_REDIS;

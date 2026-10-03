@@ -1,7 +1,7 @@
 // Minimal end-to-end API test. Run with: npm test   (uses a temporary data folder)
 const os = require('os'), path = require('path'), fs = require('fs'), assert = require('assert');
 process.env.DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'streetalert-'));
-const { app } = require('./server');
+const app = require('./server');
 
 (async () => {
   const server = app.listen(0);
