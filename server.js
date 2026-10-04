@@ -215,6 +215,12 @@ app.use((req, res, next) => {
   next();
 });
 
+// Express 4 does not catch a rejected promise thrown inside an async route handler — without
+// this, an error (such as Upstash rejecting bad credentials) leaves the request hanging forever
+// with no response sent, until the hosting platform's own timeout kills it. Wrapping every async
+// handler in this forwards the error to the app.use((err, req, res, next) => ...) handler below.
+const ah = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
 const clean = (v, max) => String(v ?? '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, max);
 const isEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
 
@@ -227,10 +233,10 @@ app.use('/api', async (req, res, next) => {
 
 app.get('/api/catalog', (req, res) => res.json({ categories: CATEGORIES, cities: CITIES }));
 
-app.get('/api/time', async (req, res) => res.json(await getTime()));
+app.get('/api/time', ah(async (req, res) => res.json(await getTime())));
 
 /* ---- accounts */
-app.post('/api/register', rateLimit(10, 10 * 60 * 1000), async (req, res) => {
+app.post('/api/register', rateLimit(10, 10 * 60 * 1000), ah(async (req, res) => {
   const db = req.db;
   const name = clean(req.body.name, 60);
   const email = clean(req.body.email, 100).toLowerCase();
@@ -249,7 +255,7 @@ app.post('/api/register', rateLimit(10, 10 * 60 * 1000), async (req, res) => {
   db.users.push(user);
   await saveDb(db);
   res.status(201).json({ token: makeToken(user.id, db.secret), user: publicUser(user) });
-});
+}));
 
 app.post('/api/login', rateLimit(20, 10 * 60 * 1000), (req, res) => {
   const db = req.db;
@@ -263,7 +269,7 @@ app.post('/api/login', rateLimit(20, 10 * 60 * 1000), (req, res) => {
 
 app.get('/api/me', auth(), (req, res) => res.json({ user: publicUser(req.user) }));
 
-app.put('/api/me', auth(), async (req, res) => {
+app.put('/api/me', auth(), ah(async (req, res) => {
   const name = clean(req.body.name, 60);
   const phone = clean(req.body.phone, 20);
   const city = clean(req.body.city, 40);
@@ -278,7 +284,7 @@ app.put('/api/me', auth(), async (req, res) => {
   }
   await saveDb(req.db);
   res.json({ user: publicUser(req.user) });
-});
+}));
 
 /* ---- faults */
 function viewFault(db, f, viewer) {
@@ -317,7 +323,7 @@ app.get('/api/faults/:id', auth(false), (req, res) => {
   res.json({ fault: viewFault(req.db, f, req.user) });
 });
 
-app.post('/api/faults', auth(), rateLimit(30, 60 * 60 * 1000), async (req, res) => {
+app.post('/api/faults', auth(), rateLimit(30, 60 * 60 * 1000), ah(async (req, res) => {
   const db = req.db;
   const { category, type } = req.body;
   const lat = Number(req.body.lat), lng = Number(req.body.lng);
@@ -339,9 +345,9 @@ app.post('/api/faults', auth(), rateLimit(30, 60 * 60 * 1000), async (req, res) 
   db.faults.push(fault);
   await saveDb(db);
   res.status(201).json({ fault: viewFault(db, fault, req.user) });
-});
+}));
 
-app.post('/api/faults/:id/confirm', auth(), async (req, res) => {
+app.post('/api/faults/:id/confirm', auth(), ah(async (req, res) => {
   const db = req.db;
   const f = db.faults.find(x => x.id === req.params.id);
   if (!f) return res.status(404).json({ error: 'Fault not found.' });
@@ -350,13 +356,13 @@ app.post('/api/faults/:id/confirm', auth(), async (req, res) => {
   if (i === -1) f.confirmations.push(req.user.id); else f.confirmations.splice(i, 1); // toggle
   await saveDb(db);
   res.json({ fault: viewFault(db, f, req.user) });
-});
+}));
 
 // Any signed-in resident can report that a fault has been repaired - not just the original
 // reporter - since the person who notices a fix is often not the person who logged it.
 // Only the original reporter can reopen a fix that turns out to be wrong (a dispute), so
 // the record cannot be flipped back and forth by anyone passing by.
-app.post('/api/faults/:id/resolve', auth(), async (req, res) => {
+app.post('/api/faults/:id/resolve', auth(), ah(async (req, res) => {
   const db = req.db;
   const f = db.faults.find(x => x.id === req.params.id);
   if (!f) return res.status(404).json({ error: 'Fault not found.' });
@@ -374,7 +380,7 @@ app.post('/api/faults/:id/resolve', auth(), async (req, res) => {
   }
   await saveDb(db);
   res.json({ fault: viewFault(db, f, req.user) });
-});
+}));
 
 app.get('/api/stats', (req, res) => {
   const db = req.db;
@@ -426,7 +432,10 @@ app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.ht
 
 app.use((err, req, res, next) => {
   console.error(err);
-  res.status(err.status || 500).json({ error: err.status === 400 ? 'Invalid request.' : 'Something went wrong on the server.' });
+  const message = err.status === 400 ? 'Invalid request.'
+    : String(err.message || '').startsWith('Storage service') ? err.message
+    : 'Something went wrong on the server.';
+  res.status(err.status || 500).json({ error: message });
 });
 
 if (require.main === module) {
