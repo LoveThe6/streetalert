@@ -36,13 +36,37 @@ async function redisCall(...cmd) {
   // with the command embedded in the URL path. The value we store is the whole database as
   // JSON and grows every time someone registers or reports a fault, so putting it in the URL
   // eventually exceeds URL length limits and the request hangs/fails with no useful error.
-  const r = await fetch(REDIS_URL, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${REDIS_TOKEN}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(cmd)
-  });
-  if (!r.ok) throw new Error('Storage service error (HTTP ' + r.status + ')');
-  return (await r.json()).result;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000); // fail fast instead of hanging forever
+  const label = cmd[0] + ' ' + (cmd[1] || '');
+  try {
+    const r = await fetch(REDIS_URL, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${REDIS_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(cmd),
+      signal: ctrl.signal
+    });
+    if (!r.ok) {
+      const text = await r.text().catch(() => '');
+      console.error('[redis]', label, 'HTTP', r.status, text.slice(0, 300));
+      throw new Error('Storage service error (HTTP ' + r.status + ')');
+    }
+    const data = await r.json();
+    if (data.error) {
+      console.error('[redis]', label, 'error:', data.error);
+      throw new Error('Storage service error: ' + data.error);
+    }
+    return data.result;
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      console.error('[redis]', label, 'timed out after 8s — check UPSTASH_REDIS_REST_URL/TOKEN are correct and the database is active');
+      throw new Error('Storage service timed out. Please try again.');
+    }
+    console.error('[redis]', label, 'failed:', err.message);
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 if (!USE_REDIS) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -53,7 +77,8 @@ async function loadDb() {
     try {
       const raw = await redisCall('GET', REDIS_KEY);
       return raw ? JSON.parse(raw) : emptyDb();
-    } catch {
+    } catch (err) {
+      console.error('[loadDb] falling back to an empty database because Redis failed:', err.message);
       return emptyDb(); // storage unreachable: fail soft rather than crash the request
     }
   }
